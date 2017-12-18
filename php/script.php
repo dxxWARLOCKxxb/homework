@@ -15,7 +15,8 @@ foreach ($links as $link) {
     echo "Загружаю $link\n";
     @file_put_contents($link, @file_get_contents($last_version['url'].$link));
 }
-echo "Запускаю обновление:\n" . shell_exec('sudo dpkg -i *.deb');
+echo "Запускаю обновление:\n";
+exec('sudo dpkg -i *.deb');
 foreach ($links as $link) {
     echo "Удаляю $link\n";
     unlink($link);
