@@ -73,7 +73,7 @@ private:
     void subtract_digits(const long_arithmetic&, const long_arithmetic&);
     void subtract_digits(const long_arithmetic&, int);
     void subtract_digits(int, int);
-    int operator int();
+    operator int();
 
 public:
     /*!
@@ -170,5 +170,6 @@ public:
     friend bool operator>=(const int&, const long_arithmetic &);
     friend bool operator==(const int&, const long_arithmetic &);
     friend bool operator!=(const int&, const long_arithmetic &);*/
+    int absolute_comparison(int number) const;
 };
 #endif

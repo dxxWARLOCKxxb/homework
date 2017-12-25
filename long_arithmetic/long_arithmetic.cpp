@@ -86,7 +86,7 @@ std::basic_ostream<char> &operator<<(std::ostream & os, const long_arithmetic & 
     return os;
 }
 
-int long_arithmetic::operator int() {
+long_arithmetic::operator int() {
     long result = 0;
     for(int i = 0; i < number_significant_digits(); ++i) {
         result *= 10;
@@ -353,24 +353,24 @@ long_arithmetic long_arithmetic::operator/(const long_arithmetic &b) const {
     int* ptr1 = this->last_digit;
     long_arithmetic digit = 0;
     auto *result = new long_arithmetic(0);
-    long_arithmetic remainder = 0;
-    while(ptr1 >= this->digits) {
-        remainder *= 10;
-        remainder += *ptr1;
-        for(; digit < 9; digit = digit + 1) {
-            if(remainder.absolute_comparison(b * (digit + 1)) < 0) break;
-        }
-        *result *= 10;
-        *result += digit;
-        remainder -= (b * digit);
-        ptr1--;
-        digit = 0;
-    }
+//    long_arithmetic remainder = 0;
+//    while(ptr1 >= this->digits) {
+//        remainder *= 10;
+//        remainder += *ptr1;
+//        for(; digit < 9; digit = digit + 1) {
+//            if(remainder.absolute_comparison(b * (digit + 1)) < 0) break;
+//        }
+//        *result *= 10;
+//        *result += digit;
+//        remainder -= (b * digit);
+//        ptr1--;
+//        digit = 0;
+//    }
     return *result;
 }
 long_arithmetic long_arithmetic::operator /(int b) const{
     auto *result = new long_arithmetic(*this);
-    result /= b;
+    *result /= b;
     return *result;
 }
 int operator/(int a, const long_arithmetic &b ) {

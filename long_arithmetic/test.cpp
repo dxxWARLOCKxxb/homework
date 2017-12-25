@@ -14,9 +14,6 @@ int  main(int argc, char* argv[]) {
         case '*':
             cout << long_arithmetic(argv[2]) * long_arithmetic(argv[3]);
             break;
-        case '/':
-            cout << long_arithmetic(argv[2]) / long_arithmetic(argv[3]);
-            break;
         default:
             cout << 0;
             break;
