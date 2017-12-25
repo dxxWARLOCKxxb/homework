@@ -64,12 +64,16 @@ private:
      * @param [in] addend - второе слагаемое
      */
     void sum_digits(const long_arithmetic&);
+    void sum_digits(int);
     /*!
      * Вычисляет разность minued и subtract без учета знака, значение разницы записывается объект, вызвавший метод
      * @param [in] minued - уменьшаемое
      * @param [in] subtract - вычитаемое
      */
     void subtract_digits(const long_arithmetic&, const long_arithmetic&);
+    void subtract_digits(const long_arithmetic&, int);
+    void subtract_digits(int, int);
+    int operator int();
 
 public:
     /*!
@@ -114,32 +118,38 @@ public:
     std::string toString() const;
     friend std::ostream&operator<<(std::ostream&, const long_arithmetic&);
 
+    long_arithmetic operator -() const;
+
     long_arithmetic&operator +=(const long_arithmetic &);
     long_arithmetic&operator -=(const long_arithmetic &);
     long_arithmetic&operator *=(const long_arithmetic &);
     long_arithmetic&operator /=(const long_arithmetic &);
+    long_arithmetic&operator %=(const long_arithmetic &);
 
     long_arithmetic operator +(const long_arithmetic &) const;
     long_arithmetic operator -(const long_arithmetic &) const;
     long_arithmetic operator *(const long_arithmetic &) const;
     long_arithmetic operator /(const long_arithmetic &) const;
+    long_arithmetic operator %(const long_arithmetic &) const;
 
-    long_arithmetic operator *(const int&) const;
-    /*long_arithmetic&operator +=(const int&);
-    long_arithmetic&operator -=(const int&);
-    long_arithmetic&operator *=(const int&);
-    long_arithmetic&operator /=(const int&);
 
-    long_arithmetic&operator +(const int&) const;
-    long_arithmetic&operator -(const int&) const;
+    long_arithmetic&operator +=(int);
+    long_arithmetic&operator -=(int);
+    long_arithmetic&operator *=(int);
+    long_arithmetic&operator /=(int);
+    long_arithmetic&operator %=(int);
 
-    long_arithmetic&operator /(const int&) const;*/
+    long_arithmetic operator +(int) const;
+    long_arithmetic operator -(int) const;
+    long_arithmetic operator *(int) const;
+    long_arithmetic operator /(int) const;
+    long_arithmetic operator %(int) const;
 
-    friend long_arithmetic operator +(const int&, const long_arithmetic &);
-    friend long_arithmetic operator -(const int&, const long_arithmetic &);
-    friend long_arithmetic operator *(const int&, const long_arithmetic &);
-    friend long_arithmetic operator /(const int&, const long_arithmetic &);
-    long_arithmetic operator -() const;
+    friend long_arithmetic operator +(int, const long_arithmetic &);
+    friend long_arithmetic operator -(int, const long_arithmetic &);
+    friend long_arithmetic operator *(int, const long_arithmetic &);
+    friend int operator /(int, const long_arithmetic &);
+    friend int operator %(int, const long_arithmetic &);
 
     bool operator<(const long_arithmetic &) const;
     bool operator>(const long_arithmetic &) const;
@@ -153,12 +163,12 @@ public:
     bool operator<=(const int&) const;
     bool operator>=(const int&) const;
     bool operator==(const int&) const;
-    bool operator!=(const int&) const;*/
+    bool operator!=(const int&) const;
     friend bool operator<(const int&, const long_arithmetic &);
     friend bool operator>(const int&, const long_arithmetic &);
     friend bool operator<=(const int&, const long_arithmetic &);
     friend bool operator>=(const int&, const long_arithmetic &);
     friend bool operator==(const int&, const long_arithmetic &);
-    friend bool operator!=(const int&, const long_arithmetic &);
+    friend bool operator!=(const int&, const long_arithmetic &);*/
 };
 #endif
