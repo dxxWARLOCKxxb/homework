@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/esdeath/CLionProjects/The Matrix/main.cpp
+iostream
+-
+matrix.h
+/home/esdeath/CLionProjects/The Matrix/matrix.h
+
+/home/esdeath/CLionProjects/The Matrix/matrix.cpp
+matrix.h
+/home/esdeath/CLionProjects/The Matrix/matrix.h
+
+/home/esdeath/CLionProjects/The Matrix/matrix.h
+pthread.h
+-
+queue
+-
+fstream
+-
+
