@@ -23,18 +23,20 @@ block::block(const block& copy) : block() {
 }
 block::~block() {
     pthread_mutex_destroy(&mutex);
+    for(size_t i = 0; i < BLOCK_SIZE; ++i)
+        delete[] __elements[i];
     delete[] __elements;
 }
 long long* block::operator[](size_t index) { return  __elements[index]; }
 long long* block::operator[](size_t index) const { return  __elements[index]; }
 
 block block::operator*(const block& b) const {
-    auto result = new block();
+    auto result = block();
     for(size_t i = 0; i < BLOCK_SIZE; ++i)
         for(size_t j = 0; j < BLOCK_SIZE; ++j)
             for(size_t k = 0; k < BLOCK_SIZE; ++k)
-                (*result)[i][j] += (*this)[i][k] * b[k][j];
-    return *result;
+                result[i][j] += (*this)[i][k] * b[k][j];
+    return result;
 }
 
 block& block::operator+=(const block& b) {
@@ -75,28 +77,32 @@ matrix::matrix(const matrix& copy) : matrix(copy.__row, copy.__col) {
 }
 matrix::matrix(size_t row, size_t col, int flag) : matrix(row, col) {
     for(size_t i = 0; i < __row; ++i)
-        for(size_t j = 0; j < __col; ++j)
+        for(size_t j = 0; j < __col; ++j) {
             (*this)[i][j] = rand() % 100;
+        }
 }
 matrix::~matrix() {
+    for(size_t i = 0; i < __row_block(); ++i)
+        delete[] __blocks[i];
     delete[] __blocks;
 }
 matrix_row matrix::operator[](size_t index) const {
-    auto result = new matrix_row(__blocks[index / BLOCK_SIZE], index);
-    return *result;
+    //auto result = new
+            return matrix_row(__blocks[index / BLOCK_SIZE], index);
+    //return *result;
 }
 matrix matrix::operator*(const matrix& b) const {
     if((*this).__col != b.__row)
         throw ERROR;
-    auto result = new matrix((*this).__row, b.__col);
-    for(size_t i = 0; i < (*result).__row_block(); ++i)
-        for(size_t j = 0; j < (*result).__col_block(); ++j)
+    auto result = matrix((*this).__row, b.__col);
+    for(size_t i = 0; i < result.__row_block(); ++i)
+        for(size_t j = 0; j < result.__col_block(); ++j)
             for(size_t k = 0; k < (*this).__col_block(); ++k) {
                 pthread_mutex_lock(&manager_mutex); //блокируем очередь заданий
-                task_manager.push(task((*result).__blocks[i][j], (*this).__blocks[i][k], b.__blocks[k][j])); //помещаем задание
+                task_manager.push(task(result.__blocks[i][j], (*this).__blocks[i][k], b.__blocks[k][j])); //помещаем задание
                 pthread_mutex_unlock(&manager_mutex); //разблокируем задание
             }
-    return *result;
+    return result;
 }
 
 std::ostream& operator<<(std::ostream& os, const matrix& value) {
