@@ -8,6 +8,8 @@
 #define GIL_GIL_H
 
 #include <cstdint>
+#include <ostream>
+using namespace std;
 
 typedef std::uint32_t DWORD;///<@brief 4-х байтовый беззнаковый целочисленный тип (двойное слово)
 typedef std::uint16_t WORD;///<@brief 2-х байтовый беззнаковый целочисленный тип (слово)
@@ -16,6 +18,7 @@ typedef std::uint8_t  BYTE;///<@brief Байтовый беззнаковый ц
 /**
  * @brief Структура, описывающая заголовок BMP файла.
  */
+#pragma pack(push, 1)
 typedef struct {
     WORD  bfType;///<@memberof ^FileHeader @brief Тип BMP, возможные значения: BM, BA, CI, CP, IC, PT. @warning В лаб.работах используется BM.
     DWORD bfSize;///<@brief Размер файла в байтах.
@@ -23,10 +26,12 @@ typedef struct {
     WORD  bfReserved2;///<@brief служебное поле.
     DWORD bfOffBits;///<@brief Смещение от начала файла до таблицы с пикселами.
 } FileHeader;
+#pragma pack(pop)
 
 /**
  * @brief Структура, описывающая информационный блок BMP файла.
  */
+#pragma pack(push, 1)
 typedef struct {
     DWORD biSize;///<@brief Размер информационного блока в байтах.
     DWORD biWidth;///<@brief Ширина изображения в пикселах.
@@ -40,17 +45,20 @@ typedef struct {
     DWORD biClrUsed;///<@brief Количество цветов в палитре.
     DWORD biClrImportant;///<@brief Количество используемых цветов, 0 если используются все. @warning Как правило не используется.
 } InfoHeader;
+#pragma pack(pop)
 
 /***
  * @brief Структура, описывающая цвет.
  * @warning Каналы записаны в обратном порядке, т.е. ABGR,а не RGBA
  */
+#pragma pack(push, 1)
 typedef struct {
     BYTE rgbBlue;///<@brief Значение синего канала
     BYTE rgbGreen;///<@brief Значение зеленого канала
     BYTE rgbRed;///<@brief Значение красного канала
     BYTE rgbReserved;///<@warning Походу всегда 0 в BMP grayscale 8bpp
 } RGB_32;
+#pragma pack(pop)
 
 /***
  * @namespace BMP
@@ -67,8 +75,8 @@ namespace BMP {
     private:
         FileHeader bmfh;///<@brief Заголовок файла.
         InfoHeader bmih;///<@brief Информационны блок файла.
-        RGB_32     aColors[];///<@brief Таблица цветов, количество цветов можно узнать в bmih.biClrUsed. Каждый цвет представляет RGB_32
-        BYTE       aBitmapBits[];///<@brief Таблица пикселов. @warning Используется выравнивание до 4 байт, т.е. если ширина изображение 6 пикселов, то размер строки будет не 6 байт, а 8 байт
+        RGB_32     *aColors;///<@brief Таблица цветов, количество цветов можно узнать в bmih.biClrUsed. Каждый цвет представляет RGB_32
+        BYTE       *aBitmapBits;///<@brief Таблица пикселов. @warning Используется выравнивание до 4 байт, т.е. если ширина изображение 6 пикселов, то размер строки будет не 6 байт, а 8 байт
     public:
         explicit Bitmap(const char* fileName);///<@brief Конструктор, загружающий изображение из файла. @param [in] fileName Строка, описывающая путь к файлу.
         /***
@@ -79,6 +87,7 @@ namespace BMP {
          */
         Bitmap(DWORD width, DWORD height, WORD bitCount = 8);
         void Save(const char* filename) const;///<@brief Метод, сохраняющий изображение в файл. @param [in] fileName Строка, описывающая путь к файлу.
+        friend ostream &operator<<(ostream &os, const Bitmap &bitmap);
         virtual ~Bitmap();///<Обычный деконструктор.
     };
 }
