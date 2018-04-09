@@ -5,6 +5,7 @@
  */
 #include "gil.h"
 #include <ostream>
+#include <cstring>
 
 namespace BMP {
     Bitmap::Bitmap(const char *fileName) {
@@ -20,11 +21,44 @@ namespace BMP {
     }
 
     Bitmap::Bitmap(DWORD width, DWORD height, WORD bitCount) {
-        //@todo Реализовать конструктор Bitmap::Bitmap(DWORD width, DWORD height, WORD bitCount)
+        bmfh.bfType = 0x4D42;
+        bmfh.bfReserved1 = 0;
+        bmfh.bfReserved2 = 0;
+
+        bmih.biSize = 0x28;
+        bmih.biWidth = width;
+        bmih.biHeight = height;
+        bmih.biPlanes = 0x1;
+        bmih.biBitCount = bitCount;
+        bmih.biCompression = 0;
+        bmih.biSizeImage = height * (width + (4 - width % 4) % 4);
+        bmih.biXPelsPerMeter = 0xB13;
+        bmih.biYPelsPerMeter = 0xB13;
+        bmih.biClrUsed = static_cast<DWORD>(1u << bmih.biBitCount);
+        bmih.biClrImportant = static_cast<DWORD>(1u << bmih.biBitCount);
+
+        bmfh.bfOffBits = sizeof(FileHeader) + sizeof(InfoHeader) + sizeof(RGB_32) * bmih.biClrUsed;
+        bmfh.bfSize = bmfh.bfOffBits + bmih.biSizeImage;
+
+        aColors = new RGB_32[bmih.biClrUsed];
+        for(int i = 0; i < bmih.biClrUsed; ++i) {
+            aColors[i].rgbBlue = static_cast<BYTE>(i);
+            aColors[i].rgbGreen = static_cast<BYTE>(i);
+            aColors[i].rgbRed = static_cast<BYTE>(i);
+            aColors[i].rgbReserved = static_cast<BYTE>(i);
+        }
+        aBitmapBits = new BYTE[bmih.biSizeImage];
+        memset(aBitmapBits, 0, bmih.biSizeImage * sizeof(BYTE));
     }
 
     void Bitmap::Save(const char *filename) const {
-        //@todo Реализовать метод void Bitmap::Save(const char *filename)
+        FILE *imageFile = fopen(filename, "wb");
+        if(nullptr == imageFile) throw std::ios_base::failure("Can't open file");
+        if(-1 == fwrite(&bmfh, sizeof(FileHeader), 1, imageFile)) throw std::ios_base::failure("Can't write FileHeader");
+        if(-1 == fwrite(&bmih, sizeof(InfoHeader), 1, imageFile)) throw std::ios_base::failure("Can't write InfoHeader");
+        if(-1 == fwrite(aColors, sizeof(RGB_32), bmih.biClrUsed, imageFile)) throw std::ios_base::failure("Can't write color's table");
+        if(-1 == fwrite(aBitmapBits, bmih.biSizeImage , 1, imageFile)) throw std::ios_base::failure("Can't write color's table");
+        fclose(imageFile);
     }
 
     Bitmap::~Bitmap() {
@@ -43,7 +77,6 @@ namespace BMP {
         os << "\tImage width: " << bitmap.bmih.biWidth << " px" << std::endl;
         os << "\tImage height: " << bitmap.bmih.biHeight << " px" << std::endl;
         os << "\tColor planes: " << bitmap.bmih.biPlanes << std::endl;
-        os << "\tImage height: " << bitmap.bmih.biHeight << " px" << std::endl;
         os << "\tDepth: " << bitmap.bmih.biBitCount << " bpp" << std::endl;
         os << "\tCompression: " << (bitmap.bmih.biCompression ? "true" : "false") << std::endl;
         os << "\tImage data size: " << bitmap.bmih.biSizeImage << " byte" << std::endl;
@@ -59,6 +92,7 @@ namespace BMP {
             os << tmp << " ";
         }
         os << std::endl << "Image data:" << std::endl;
+        if(bitmap.bmih.biSizeImage > 512) return os << "is big" << std::endl;
         for(int h = 0; h < bitmap.bmih.biHeight; ++h) {
             for(int w = 0; w < bitmap.bmih.biWidth; ++w) os << (int)bitmap.aBitmapBits[h * (4 - bitmap.bmih.biWidth % 4) % 4 + w] << " ";
             os << std::endl;
