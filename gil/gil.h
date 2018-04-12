@@ -78,7 +78,7 @@ namespace BMP {
         RGB_32     *aColors;///<@brief Таблица цветов, количество цветов можно узнать в bmih.biClrUsed. Каждый цвет представляет RGB_32
         BYTE       *aBitmapBits;///<@brief Таблица пикселов. @warning Используется выравнивание до 4 байт, т.е. если ширина изображение 6 пикселов, то размер строки будет не 6 байт, а 8 байт
     public:
-        explicit Bitmap(const char* fileName);///<@brief Конструктор, загружающий изображение из файла. @param [in] fileName Строка, описывающая путь к файлу.
+        explicit Bitmap(const char* fileName) noexcept(false);///<@brief Конструктор, загружающий изображение из файла. @param [in] fileName Строка, описывающая путь к файлу.
         /***
          * @brief Конструктор, создающий пустое изображение указанного размера.
          * @param [in] width Ширина изображения в пикселах
@@ -86,9 +86,23 @@ namespace BMP {
          * @param [in] bitCount Глубина цвета бит/пиксел. По умолчанию 8.
          */
         Bitmap(DWORD width, DWORD height, WORD bitCount = 8);
-        void Save(const char* filename) const;///<@brief Метод, сохраняющий изображение в файл. @param [in] fileName Строка, описывающая путь к файлу.
+        /***
+         * @brief Конструктор клонирования
+         * @param [in] Clone - клонируемое изображение
+         */
+        Bitmap(const Bitmap &Clone);
+        void Save(const char* filename) const noexcept(false);///<@brief Метод, сохраняющий изображение в файл. @param [in] fileName Строка, описывающая путь к файлу.
         friend ostream &operator<<(ostream &os, const Bitmap &bitmap);
         virtual ~Bitmap();///<Обычный деконструктор.
+
+        /***
+         * @brief Смешивание двух изображений одинакого размера, используя тертье в качестве альфа-канала
+         * @param src - второе смешиваемое изображение
+         * @param alpha - изображение альфа-канал
+         * @return Новое изображение - результат смешивания.
+         * @throw std::invalid_argument, если размеры изображения или глубина цвета не совпадают.
+         */
+        Bitmap& blending(const Bitmap &src, const Bitmap &alpha) const noexcept(false);
     };
 }
 #endif //GIL_GIL_H

@@ -45,7 +45,7 @@ namespace BMP {
             aColors[i].rgbBlue = static_cast<BYTE>(i);
             aColors[i].rgbGreen = static_cast<BYTE>(i);
             aColors[i].rgbRed = static_cast<BYTE>(i);
-            aColors[i].rgbReserved = static_cast<BYTE>(i);
+            aColors[i].rgbReserved = 0;
         }
         aBitmapBits = new BYTE[bmih.biSizeImage];
         memset(aBitmapBits, 0, bmih.biSizeImage * sizeof(BYTE));
@@ -94,9 +94,37 @@ namespace BMP {
         os << std::endl << "Image data:" << std::endl;
         if(bitmap.bmih.biSizeImage > 512) return os << "is big" << std::endl;
         for(int h = 0; h < bitmap.bmih.biHeight; ++h) {
-            for(int w = 0; w < bitmap.bmih.biWidth; ++w) os << (int)bitmap.aBitmapBits[h * (4 - bitmap.bmih.biWidth % 4) % 4 + w] << " ";
+            for(int w = 0; w < bitmap.bmih.biWidth; ++w) os << (int)bitmap.aBitmapBits[h * (bitmap.bmih.biWidth + (4 - bitmap.bmih.biWidth % 4) % 4) + w] << " ";
             os << std::endl;
         }
         return os;
+    }
+
+    Bitmap::Bitmap(const Bitmap &Clone) {
+        bmfh = Clone.bmfh;
+        bmih = Clone.bmih;
+        aColors = new RGB_32[bmih.biClrUsed];
+        memcpy(aColors, Clone.aColors, sizeof(RGB_32) * bmih.biClrUsed);
+        aBitmapBits = new BYTE[bmih.biSizeImage];
+        memcpy(aBitmapBits, Clone.aBitmapBits, sizeof(BYTE) * bmih.biSizeImage);
+    }
+
+    Bitmap &Bitmap::blending(const Bitmap &src, const Bitmap &alpha) const {
+        if(this->bmih.biWidth != src.bmih.biWidth && this->bmih.biHeight != src.bmih.biHeight &&
+           this->bmih.biWidth != alpha.bmih.biWidth && this->bmih.biHeight != alpha.bmih.biHeight)
+            throw std::invalid_argument("Dimensions do not match");
+        if(this->bmih.biBitCount != src.bmih.biBitCount && this->bmih.biBitCount != alpha.bmih.biBitCount)
+            throw std::invalid_argument("Depth do not match");
+        //release
+        auto Result = new Bitmap(src.bmih.biWidth, src.bmih.biHeight, src.bmih.biBitCount);
+        int index = 0;
+        for(int h = 0; h < Result->bmih.biHeight; ++h) {
+            for(int w = 0; w < Result->bmih.biWidth; ++w) {
+                index = h * (Result->bmih.biWidth + (4 - Result->bmih.biWidth % 4) % 4) + w;
+                float alpha_value = (float) alpha.aBitmapBits[index] / (alpha.bmih.biClrUsed - 1);
+                Result->aBitmapBits[index] = (BYTE) ((1 - alpha_value) * src.aBitmapBits[index] + alpha_value * this->aBitmapBits[index]);
+            }
+        }
+        return *Result;
     }
 }
