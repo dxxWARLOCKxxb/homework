@@ -66,6 +66,10 @@ typedef struct {
  * @warning В приложениях не рекомендуется использовать классы и функции, объявленные вне этого пространнства имен.
  */
 namespace BMP {
+    typedef bool DIRECTION ;
+    const DIRECTION RL_VERTICAL = false;
+    const DIRECTION RL_HORIZONTAL = true;
+
     /***
      * @class Bitmap
      * @brief Класс для работы с файлами формата .bmp
@@ -99,10 +103,18 @@ namespace BMP {
          * @brief Смешивание двух изображений одинакого размера, используя тертье в качестве альфа-канала
          * @param src - второе смешиваемое изображение
          * @param alpha - изображение альфа-канал
-         * @return Новое изображение - результат смешивания.
+         * @return Ссылку на измененное изображение
          * @throw std::invalid_argument, если размеры изображения или глубина цвета не совпадают.
+         * @warning Изменяет текущий объект!
          */
-        Bitmap& blending(const Bitmap &src, const Bitmap &alpha) const noexcept(false);
+        Bitmap& blending(const Bitmap &src, const Bitmap &alpha) noexcept(false);
+        /***
+         * @brief Отражает текущее изображение
+         * @param [in] direction - определяет направление отражения, значения: [RL_VERTICAL, RL_HORIZONTAL]
+         * @return Ссылку на измененное изображение
+         */
+        Bitmap & reflection(DIRECTION direction);
     };
 }
+
 #endif //GIL_GIL_H

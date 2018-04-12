@@ -109,22 +109,43 @@ namespace BMP {
         memcpy(aBitmapBits, Clone.aBitmapBits, sizeof(BYTE) * bmih.biSizeImage);
     }
 
-    Bitmap &Bitmap::blending(const Bitmap &src, const Bitmap &alpha) const {
+    Bitmap &Bitmap::blending(const Bitmap &src, const Bitmap &alpha) {
         if(this->bmih.biWidth != src.bmih.biWidth && this->bmih.biHeight != src.bmih.biHeight &&
            this->bmih.biWidth != alpha.bmih.biWidth && this->bmih.biHeight != alpha.bmih.biHeight)
             throw std::invalid_argument("Dimensions do not match");
         if(this->bmih.biBitCount != src.bmih.biBitCount && this->bmih.biBitCount != alpha.bmih.biBitCount)
             throw std::invalid_argument("Depth do not match");
-        //release
-        auto Result = new Bitmap(src.bmih.biWidth, src.bmih.biHeight, src.bmih.biBitCount);
+
         int index = 0;
-        for(int h = 0; h < Result->bmih.biHeight; ++h) {
-            for(int w = 0; w < Result->bmih.biWidth; ++w) {
-                index = h * (Result->bmih.biWidth + (4 - Result->bmih.biWidth % 4) % 4) + w;
+        for(int h = 0; h < this->bmih.biHeight; ++h) {
+            for(int w = 0; w < this->bmih.biWidth; ++w) {
+                index = h * (this->bmih.biWidth + (4 - this->bmih.biWidth % 4) % 4) + w;
                 float alpha_value = (float) alpha.aBitmapBits[index] / (alpha.bmih.biClrUsed - 1);
-                Result->aBitmapBits[index] = (BYTE) ((1 - alpha_value) * src.aBitmapBits[index] + alpha_value * this->aBitmapBits[index]);
+                this->aBitmapBits[index] = (BYTE) ((1 - alpha_value) * src.aBitmapBits[index] + alpha_value * this->aBitmapBits[index]);
             }
         }
-        return *Result;
+        return *this;
+    }
+
+    Bitmap & Bitmap::reflection(DIRECTION direction) {
+        auto realWidth = this->bmih.biWidth + (4 - this->bmih.biWidth % 4) % 4;
+        if(direction == RL_HORIZONTAL) {
+            auto tmp_data = new BYTE[this->bmih.biSizeImage];
+            memcpy(tmp_data, this->aBitmapBits, this->bmih.biSizeImage);
+            BYTE* end_data = tmp_data + this->bmih.biSizeImage;
+            for(auto i = 0; i < this->bmih.biHeight; ++i)
+                memcpy(this->aBitmapBits + i * realWidth,end_data - (i + 1) * realWidth, realWidth);
+            delete[] tmp_data;
+        } else {
+            BYTE swap = 0;
+            for(int h = 0; h < this->bmih.biHeight; ++h) {
+                for(int w = 0; w < this->bmih.biWidth / 2; ++w) {
+                    swap = this->aBitmapBits[h*realWidth + w];
+                    this->aBitmapBits[h*realWidth + w] = this->aBitmapBits[h*realWidth + this->bmih.biWidth - 1 - w];
+                    this->aBitmapBits[h*realWidth + this->bmih.biWidth - 1 - w] = swap;
+                }
+            }
+        }
+        return *this;
     }
 }
