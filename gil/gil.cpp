@@ -148,4 +148,23 @@ namespace BMP {
         }
         return *this;
     }
+
+    Bitmap &Bitmap::rotation(const float angle) {
+        if(angle != 90)
+            throw std::invalid_argument("Rotation work on 90 degree");
+        auto old_real_width = bmih.biWidth + (4 - bmih.biWidth % 4) % 4;
+        auto new_real_width = bmih.biHeight + (4 - bmih.biHeight % 4) % 4;
+        auto tmp_data = aBitmapBits;
+        auto swap = bmih.biHeight;
+        bmih.biHeight = bmih.biWidth;
+        bmih.biWidth = swap;
+        aBitmapBits = new BYTE[new_real_width * bmih.biHeight];
+        for(auto h = 0; h < bmih.biHeight; ++h) {
+            for(auto w = 0; w < bmih.biWidth; ++w) {
+                aBitmapBits[h * new_real_width + w] = tmp_data[w * old_real_width + h];
+            }
+        }
+        delete[] tmp_data;
+        return *this;
+    }
 }

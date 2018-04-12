@@ -114,6 +114,12 @@ namespace BMP {
          * @return Ссылку на измененное изображение
          */
         Bitmap & reflection(DIRECTION direction);
+        /***
+         * @brief - поворачивает изображение вокруг центра на заданный угол
+         * @param [in] angle - угол поворота в градусах
+         * @return Ссылку на измененное изображение
+         */
+        Bitmap & rotation(const float angle);
     };
 }
 
