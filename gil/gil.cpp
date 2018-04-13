@@ -6,6 +6,7 @@
 #include "gil.h"
 #include <ostream>
 #include <cstring>
+#include <cmath>
 
 namespace BMP {
     Bitmap::Bitmap(const char *fileName) {
@@ -62,6 +63,7 @@ namespace BMP {
     }
 
     Bitmap::~Bitmap() {
+        if(__last_gistogram != nullptr) delete __last_gistogram;
         delete[] aColors;
         delete[] aBitmapBits;
     }
@@ -167,4 +169,73 @@ namespace BMP {
         delete[] tmp_data;
         return *this;
     }
+
+    Gistogram &Bitmap::getGistogram() {
+        if(__last_gistogram != nullptr) delete __last_gistogram;
+        __last_gistogram = new Gistogram(*this);
+        return *__last_gistogram;
+    }
+
+    BMP::Gistogram::Gistogram(const Bitmap &image) {
+        __mean__  = 0, __variance__ = 0, __entropy__ = 0;
+        __uniformity__ = 0, __skewness__ = 0, __kurtosis__ = 0;
+
+        auto real_width = image.bmih.biWidth + (4 - image.bmih.biWidth % 4) % 4;
+        size = image.bmih.biClrUsed;
+        __data = new DWORD[size];
+        memset(__data, 0, sizeof(DWORD) * image.bmih.biClrUsed);
+
+        for(auto h = 0; h < image.bmih.biHeight; ++h)
+            for(auto w = 0; w < image.bmih.biWidth; ++w)
+                __data[image.aBitmapBits[h * real_width + w]]++;
+
+        point_counts = image.bmih.biWidth * image.bmih.biHeight;
+
+        __scale_col__ = __data[0];
+        for(auto i = 0; i < size; ++i) {
+            if(__data[i] > __scale_col__) __scale_col__ = __data[i];
+            __mean__ += (__data[i] * i);
+        }
+        __mean__ /= point_counts;
+        __scale_col__ /= 140;
+
+        for(auto i = 0; i < size; ++i) {
+            __variance__ += pow((__data[i] - __mean__), 2) * i;
+            __kurtosis__ += pow((__data[i] - __mean__), 4) * i;
+            __skewness__ += pow((__data[i] - __mean__), 3) * i;
+            __uniformity__ += pow(__data[i], 2) / point_counts;
+            __entropy__ -= __data[i] * log2(__data[i] / point_counts) / point_counts;
+        }
+
+        __variance__ /= point_counts;
+
+        __kurtosis__ /= pow(__variance__, 2);
+        __kurtosis__ -= 3;
+
+        __skewness__ /= pow(__variance__, 1.5);
+
+        __uniformity__ /= point_counts;
+
+//        __entropy__ /= point_counts;
+    }
+
+    ostream &operator<<(ostream &os, const Gistogram &gistogram) {
+        for(auto i = 0; i < gistogram.size; ++i) {
+            os << "[" << i << "] \t| ";
+            for(auto j = 0; j < (int) (gistogram.__data[i] / gistogram.__scale_col__); ++j) os << ":";
+            os << "(" << gistogram.__data[i] << ")" << std::endl;
+        }
+        return os;
+    }
+
+    Gistogram::Gistogram(const Gistogram &Clone) {
+        *this = Clone;
+        __data = new DWORD[size];
+        memcpy(__data, Clone.__data, sizeof(DWORD) * size);
+    }
+
+    Gistogram::~Gistogram() {
+        delete[] __data;
+    }
+
 }

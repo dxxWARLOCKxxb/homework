@@ -9,6 +9,8 @@
 
 #include <cstdint>
 #include <ostream>
+//#include "TheMatrix/matrix.h"
+
 using namespace std;
 
 typedef std::uint32_t DWORD;///<@brief 4-х байтовый беззнаковый целочисленный тип (двойное слово)
@@ -66,6 +68,7 @@ typedef struct {
  * @warning В приложениях не рекомендуется использовать классы и функции, объявленные вне этого пространнства имен.
  */
 namespace BMP {
+    class Gistogram;
     typedef bool DIRECTION ;
     const DIRECTION RL_VERTICAL = false;
     const DIRECTION RL_HORIZONTAL = true;
@@ -77,6 +80,7 @@ namespace BMP {
      */
     class Bitmap {
     private:
+        Gistogram* __last_gistogram = nullptr; ///@brief служебное поля для вызова деструкторов гистограмм яркости.
         FileHeader bmfh;///<@brief Заголовок файла.
         InfoHeader bmih;///<@brief Информационны блок файла.
         RGB_32     *aColors;///<@brief Таблица цветов, количество цветов можно узнать в bmih.biClrUsed. Каждый цвет представляет RGB_32
@@ -119,7 +123,78 @@ namespace BMP {
          * @param [in] angle - угол поворота в градусах
          * @return Ссылку на измененное изображение
          */
-        Bitmap & rotation(const float angle);
+        Bitmap & rotation(float angle);
+
+        friend Gistogram;
+        /***
+         * @brief Функция получения гистограммы яркости изображения
+         * @return Гистограмму яроксти
+         */
+        Gistogram& getGistogram();
+    };
+}
+
+namespace BMP {
+    /***
+     * @class Gistogram
+     * @brief Класс "гистограмма яркости", включает в себя как саму гистограмму, так и рассчетные характеристики
+     */
+    class Gistogram {
+    private:
+        DWORD *__data;///@brief выборка
+        DWORD size;///@brief размер выборки
+        DWORD point_counts;///@brief количество точек
+        long double __scale_col__;///@brief вспомогательное поле, для выводи гистограммы (масштаб)
+        long double __mean__;///@brief Среднее значение
+        long double __variance__;///@brief Дисперсия
+        long double __entropy__;///@brief Энтропия
+        long double __uniformity__;///@brief Энергия
+        long double __skewness__;///@brief Ассиметрия
+        long double __kurtosis__;///@brief Эксцесс
+    public:
+        /***
+         * Конструктор гистограмы по изображению
+         * @param image - исходное изображение
+         */
+        explicit Gistogram(const Bitmap &image);
+        /***
+         * Конструктор клонирования
+         * @param Clone - клонируемый объект
+         */
+        Gistogram(const Gistogram &Clone);
+        ~Gistogram();
+        /***
+         * @brief Характеристика диаграммы яркости
+         * @return Среднее значение
+         */
+        long double mean() const { return __mean__;};
+        /***
+         * @brief Характеристика диаграммы яркости
+         * @return Дисперсия
+         */
+        long double variance() const { return __variance__;};
+        /***
+         * @brief Характеристика диаграммы яркости
+         * @return Энтропия
+         */
+        long double entropy() const { return __entropy__;};
+        /***
+         * @brief Характеристика диаграммы яркости
+         * @return Энергия
+         */
+        long double uniformity() const { return __uniformity__;};
+        /***
+         * @brief Характеристика диаграммы яркости
+         * @return Ассиметрия
+         */
+        long double skewness() const { return __skewness__;};
+        /***
+         * @brief Характеристика диаграммы яркости
+         * @return Эксцесс
+         */
+        long double kurtosis() const { return __kurtosis__;};
+
+        friend ostream &operator<<(ostream &os, const Gistogram &gistogram);
     };
 }
 
