@@ -69,6 +69,8 @@ typedef struct {
  */
 namespace BMP {
     class Gistogram;
+    class CooccurrenceMatrix;
+
     typedef bool DIRECTION ;
     const DIRECTION RL_VERTICAL = false;
     const DIRECTION RL_HORIZONTAL = true;
@@ -81,6 +83,7 @@ namespace BMP {
     class Bitmap {
     private:
         Gistogram* __last_gistogram = nullptr; ///@brief служебное поля для вызова деструкторов гистограмм яркости.
+        CooccurrenceMatrix* __last_co_matrix = nullptr; ///@brief служебное поля для вызова деструкторов матриц совместной встречаемости.
         FileHeader bmfh;///<@brief Заголовок файла.
         InfoHeader bmih;///<@brief Информационны блок файла.
         RGB_32     *aColors;///<@brief Таблица цветов, количество цветов можно узнать в bmih.biClrUsed. Каждый цвет представляет RGB_32
@@ -126,11 +129,13 @@ namespace BMP {
         Bitmap & rotation(float angle);
 
         friend Gistogram;
+        friend CooccurrenceMatrix;
         /***
          * @brief Функция получения гистограммы яркости изображения
          * @return Гистограмму яроксти
          */
         Gistogram& getGistogram();
+        CooccurrenceMatrix& getCooccurrenceMatrix();
     };
 }
 
@@ -162,7 +167,7 @@ namespace BMP {
          * @param Clone - клонируемый объект
          */
         Gistogram(const Gistogram &Clone);
-        ~Gistogram();
+        virtual ~Gistogram();
         /***
          * @brief Характеристика диаграммы яркости
          * @return Среднее значение
@@ -195,6 +200,26 @@ namespace BMP {
         long double kurtosis() const { return __kurtosis__;};
 
         friend ostream &operator<<(ostream &os, const Gistogram &gistogram);
+    };
+}
+
+
+namespace BMP {
+    /***
+     * @class CooccurrenceMatrix
+     * @brief класс матрицы совместной встречаемости
+     */
+    class CooccurrenceMatrix {
+    private:
+        DWORD *__data;
+        long double __uniformity__;
+    public:
+        explicit CooccurrenceMatrix(const Bitmap &image);
+        CooccurrenceMatrix(const CooccurrenceMatrix& Clone);
+        virtual ~CooccurrenceMatrix();
+
+        void SaveAsBitmap(const char* fileName) const;
+        long double uniformity() { return __uniformity__; };
     };
 }
 

@@ -64,6 +64,7 @@ namespace BMP {
 
     Bitmap::~Bitmap() {
         if(__last_gistogram != nullptr) delete __last_gistogram;
+        if(__last_co_matrix != nullptr) delete __last_co_matrix;
         delete[] aColors;
         delete[] aBitmapBits;
     }
@@ -176,6 +177,12 @@ namespace BMP {
         return *__last_gistogram;
     }
 
+    CooccurrenceMatrix &Bitmap::getCooccurrenceMatrix() {
+        if(__last_co_matrix != nullptr) delete __last_co_matrix;
+        __last_co_matrix = new CooccurrenceMatrix(*this);
+        return *__last_co_matrix;
+    }
+
     BMP::Gistogram::Gistogram(const Bitmap &image) {
         __mean__  = 0, __variance__ = 0, __entropy__ = 0;
         __uniformity__ = 0, __skewness__ = 0, __kurtosis__ = 0;
@@ -200,23 +207,21 @@ namespace BMP {
         __scale_col__ /= 140;
 
         for(auto i = 0; i < size; ++i) {
-            __variance__ += pow((__data[i] - __mean__), 2) * i;
-            __kurtosis__ += pow((__data[i] - __mean__), 4) * i;
-            __skewness__ += pow((__data[i] - __mean__), 3) * i;
+            __variance__ += pow((i - __mean__), 2) * __data[i];
+            __kurtosis__ += pow((i - __mean__), 4) * __data[i];
+            __skewness__ += pow((i - __mean__), 3) * __data[i];
             __uniformity__ += pow(__data[i], 2) / point_counts;
             __entropy__ -= __data[i] * log2(__data[i] / point_counts) / point_counts;
         }
 
         __variance__ /= point_counts;
 
-        __kurtosis__ /= pow(__variance__, 2);
+        __kurtosis__ /= pow(__variance__, 2) * point_counts;
         __kurtosis__ -= 3;
 
-        __skewness__ /= pow(__variance__, 1.5);
+        __skewness__ /= pow(__variance__, 1.5) * point_counts;
 
         __uniformity__ /= point_counts;
-
-//        __entropy__ /= point_counts;
     }
 
     ostream &operator<<(ostream &os, const Gistogram &gistogram) {
@@ -238,4 +243,19 @@ namespace BMP {
         delete[] __data;
     }
 
+    CooccurrenceMatrix::CooccurrenceMatrix(const Bitmap &image) {
+
+    }
+
+    CooccurrenceMatrix::CooccurrenceMatrix(const CooccurrenceMatrix &Clone) {
+
+    }
+
+    CooccurrenceMatrix::~CooccurrenceMatrix() {
+
+    }
+
+    void CooccurrenceMatrix::SaveAsBitmap(const char *fileName) const {
+
+    }
 }
