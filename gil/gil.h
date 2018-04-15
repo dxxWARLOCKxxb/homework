@@ -135,7 +135,7 @@ namespace BMP {
          * @return Гистограмму яроксти
          */
         Gistogram& getGistogram();
-        CooccurrenceMatrix& getCooccurrenceMatrix();
+        CooccurrenceMatrix *getCooccurrenceMatrix(int col, int row) noexcept(false);
     };
 }
 
@@ -212,9 +212,13 @@ namespace BMP {
     class CooccurrenceMatrix {
     private:
         DWORD *__data;
+        DWORD dimension;
+        DWORD max;
+        int col;
+        int row;
         long double __uniformity__;
     public:
-        explicit CooccurrenceMatrix(const Bitmap &image);
+        explicit CooccurrenceMatrix(const Bitmap &image, int col, int row);
         CooccurrenceMatrix(const CooccurrenceMatrix& Clone);
         virtual ~CooccurrenceMatrix();
 

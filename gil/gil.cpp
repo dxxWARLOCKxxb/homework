@@ -64,7 +64,7 @@ namespace BMP {
 
     Bitmap::~Bitmap() {
         if(__last_gistogram != nullptr) delete __last_gistogram;
-        if(__last_co_matrix != nullptr) delete __last_co_matrix;
+//        if(__last_co_matrix != nullptr) delete __last_co_matrix;
         delete[] aColors;
         delete[] aBitmapBits;
     }
@@ -175,12 +175,16 @@ namespace BMP {
         if(__last_gistogram != nullptr) delete __last_gistogram;
         __last_gistogram = new Gistogram(*this);
         return *__last_gistogram;
+//        return *(new Gistogram(*this));
     }
 
-    CooccurrenceMatrix &Bitmap::getCooccurrenceMatrix() {
-        if(__last_co_matrix != nullptr) delete __last_co_matrix;
-        __last_co_matrix = new CooccurrenceMatrix(*this);
-        return *__last_co_matrix;
+    CooccurrenceMatrix *Bitmap::getCooccurrenceMatrix(int col, int row) {
+        if(col >= bmih.biWidth || row >= bmih.biHeight)
+            throw std::invalid_argument("Invalid col or row.");
+//        if(__last_co_matrix != nullptr) delete __last_co_matrix;
+//        __last_co_matrix = new CooccurrenceMatrix(*this, col, row);
+//        return *__last_co_matrix;
+        return new CooccurrenceMatrix(*this, col, row);
     }
 
     BMP::Gistogram::Gistogram(const Bitmap &image) {
@@ -211,7 +215,7 @@ namespace BMP {
             __kurtosis__ += pow((i - __mean__), 4) * __data[i];
             __skewness__ += pow((i - __mean__), 3) * __data[i];
             __uniformity__ += pow(__data[i], 2) / point_counts;
-            __entropy__ -= __data[i] * log2(__data[i] / point_counts) / point_counts;
+            __entropy__ -= __data[i] * log2((long double)__data[i] / point_counts) / point_counts;
         }
 
         __variance__ /= point_counts;
@@ -243,19 +247,50 @@ namespace BMP {
         delete[] __data;
     }
 
-    CooccurrenceMatrix::CooccurrenceMatrix(const Bitmap &image) {
+    CooccurrenceMatrix::CooccurrenceMatrix(const Bitmap &image, int col, int row) : col(col), row(row) {
+        dimension = image.bmih.biClrUsed;
+        __data = new DWORD[dimension * dimension];
+        memset(__data, 0, sizeof(BYTE) * dimension * dimension);
 
+        auto real_width = image.bmih.biWidth + (4 - image.bmih.biWidth % 4) % 4;
+        for(auto h = 0; h < image.bmih.biHeight; ++h)
+            for(auto w = 0; w < image.bmih.biWidth; ++w) {
+                if(h + row < 0 || h + row >= image.bmih.biHeight ||
+                        w + col < 0 || w + col >= image.bmih.biWidth)
+                    continue;
+                __data[dimension * image.aBitmapBits[(h + row) * real_width + (w + col)]
+                        + image.aBitmapBits[h * real_width + w]]++;
+            }
+
+        __uniformity__ = 0;
+        max = __data[0];
+        DWORD Nt = (image.bmih.biWidth - abs(col)) * (image.bmih.biHeight - abs(row));
+        for(auto i = 0; i < dimension; ++i)
+            for(auto j = 0; j < dimension; ++j) {
+                if(__data[i * dimension + j] > max) max = __data[i * dimension + j];
+                __uniformity__ +=  pow((long double)__data[i * dimension + j] / Nt, 2);
+        }
     }
 
     CooccurrenceMatrix::CooccurrenceMatrix(const CooccurrenceMatrix &Clone) {
-
+        *this = Clone;
+        __data = new DWORD[dimension * dimension];
+        memcpy(__data, Clone.__data, sizeof(BYTE) * dimension * dimension);
     }
 
     CooccurrenceMatrix::~CooccurrenceMatrix() {
-
+        delete[] __data;
     }
 
     void CooccurrenceMatrix::SaveAsBitmap(const char *fileName) const {
-
+        auto image = new Bitmap(dimension, dimension);
+        auto real_width = dimension + (4 - dimension % 4) % 4;
+        for(auto h = 0; h < dimension; ++h)
+            for(auto w = 0; w < dimension; ++w) {
+                image->aBitmapBits[h * real_width + w] =(BYTE)
+                        ((1. - (long double)__data[h * dimension + w] / max) * (image->bmih.biClrUsed - 1));
+            }
+        image->Save(fileName);
+        delete image;
     }
 }
